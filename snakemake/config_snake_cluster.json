@@ -1,0 +1,25 @@
+{
+    "__default__":{
+       "queue":"core",
+       "time":"3-00:00:00",
+       "partition":"core",
+       "n":4,
+       "name":"{rule}",
+       "output":"logs/slurm/{rule}.out",
+       "error":"logs/slurm/{rule}.err",
+    },
+    "call":{
+       "time":"7-0:00:00",
+       "n":20,
+       "name":"{rule}.{wildcards}",
+       "output":"logs/slurm/{rule}.{wildcards}.out",
+       "error":"logs/slurm/{rule}.{wildcards}.err"
+    },
+    "genotype":{
+       "time":"3-0:00:00",
+       "n":8,
+       "name":"{rule}.{wildcards}",
+       "output":"logs/slurm/{rule}.{wildcards}.out",
+       "error":"logs/slurm/{rule}.{wildcards}.err"
+    }
+ }
