@@ -437,3 +437,47 @@ done
 # Some more code for making example figures, and looking at concordance in the
 # SNP data from Smeds & Ellegren, 2023.
 bash/trios.sh
+
+
+
+############################ PLOTTING AND STATS IN R ###########################
+
+# Plot with the length distributions for the different classes
+R plot_figure1.R
+# Add uncurated and rejected/removed
+R plot_figureS3.R
+
+# Plot repeat content in SVs
+R plot_figure2.R
+
+# Plot PCAs of SVs and SNPs
+R plot_figure3.R
+# PCA comparing one and two curators
+R plot_figureS1.R
+# PCA comparing kept with removed and uncurated
+R plot_figureS2.R
+
+# Plot Allele frequency spectrum (using deletions before manual curation, to
+# not lose rare variants)
+R plot_figure4.R
+
+# Plot load for each generation
+R plot_figure5.R
+
+# Plot load for descendants to original founders compared to descendants to
+# immigrants from the same time period
+R plot_figure6.R
+
+
+
+
+
+# Plot PCA with SNPs, INDELS and SVs
+R plot_figure_PCA_SNP_INDEL_SV.R
+
+# Plot PCA with Duphold-removed and rejected, together with PCAs of uncurated
+R plot_figure_PCA_removed_uncurated.R
+
+
+# Plot genetic load
+R plot_figure_load.R
