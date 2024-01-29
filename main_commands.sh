@@ -3,11 +3,14 @@
 
 
 #### Software versions used:
+#smoove/0.2.8
 #vcftools/0.1.16
 #bcftools/1.17
 #snakemake/7.18.2
 #python/3.9.5
 #pysam/0.17.0-python3.9.5
+#samplot/1.3.0
+#plotcritic/1.0.1
 #plink2/2.00-alpha-3.7-20221024
 #GATK/3.8-0
 #htslib/1.12
@@ -16,7 +19,7 @@
 #R/4.2.1
 
 ############################## SMOVE AND DUPHOLD ###############################
-#Code for running smoove:
+#Code for running smoove (using a sigularity container):
 bash/smoove.sh
 
 # Filter to keep only autosomes
@@ -53,7 +56,6 @@ do
 done
 # 57424 DEL, 4372 DUP, 6208 INV left
 
-
 # Check if there are any sites with only fixed individuals
 for i in "DEL" "DUP" "INV"
 do
@@ -87,20 +89,19 @@ done
 
 # Extract a set with only duphold filtered deletions to use for SFS (can't
 # ute the genotypefilter/curation and filter out rare variants)
-# Save only variants >50bp and <10,000bp
+# Save only variants >50bp and <10,000bp (the length classes with fewest false positives according to the manual curation)
 bcftools view -i 'SVLEN>=-10000 & SVLEN<-50' -f '%CHROM\t%POS\t%INFO/END[\t%GT]\n' data/filtered/duphold.fold.MHSQ.DEL.vcf >data/filtered/duphold.fold.MHSQ.DEL.50-10000.vcf
 
 
 
 ########################### SAMPLOT AND PLOTCRITIC #############################
 # (Deletions are used as example)
-# The variants are divided by length to simply the manual curation
+# The variants are divided by length to simplify the manual curation
 
 # Preparation, create multiple scripts for each batch to speed up runtime
 bash/prepare_samplot_scripts_del.sh
 
 # Samplot was installed in a conda environment
-module unload python pysam
 conda create --name samplotcritic
 source conda_init.sh
 conda activate samplotcritic
@@ -118,7 +119,7 @@ done
 
 # In the same conda environment, install plotcritic:
 conda install -c bioconda plotcritic
-### genertate plotcritic websites (one for each length batch)
+### generate plotcritic websites (one for each length batch)
 mkdir plotcritic
 for set in "0-50" "50-100" "100-150" "150-175" "175-200" "200-250" "250-300" "300-400" "400-500" "500-750" "750-1000" "from1000"
 do
@@ -158,7 +159,7 @@ mkdir data/rejected
 for t in "DEL" "DUP" "INV"
 do
   echo $t
-  # Get the rejected sites and ids (first strict, then relaxed)
+  # Get the rejected sites and ids 
   grep -e $'0.0\t100.0\t0.0' -e $'0.0\t0.0\t100.0' plotcritic/plcr_${t}_summary_report_Linnea.tsv |awk '{s=$3+1; print $2"\t"s"\t"$4}' >plotcritic/rejected_${t}_1cur_$f.pos.txt
   awk '{print $1":"$2"-"$3}' plotcritic/rejected_${t}_1cur_$f.pos.txt |sort |join - <(sort data/filtered/duphold.fold.MHSQ.$t.list) |cut -f2 -d" " |sort -g >plotcritic/rejected_${t}_1cur_$f.id.txt
   vcftools --vcf data/filtered/duphold.fold.MHSQ.$t.vcf --snps plotcritic/rejected_${t}_1cur_${f}.id.txt --recode --recode-INFO-all --out data/rejected/1cur.$f.$t
@@ -175,7 +176,6 @@ do
   mv data/uncurated/$c.$f.$t.recode.vcf data/uncurated/$c.$f.$t.vcf
   grep -v "#" data/uncurated/$c.$f.$t.vcf |wc
 done
-
 
 
 
@@ -340,8 +340,7 @@ done
 snakemake --snakefile snakemake/outgroup.snakefile -p -j 64  --cluster "sbatch -p {cluster.partition} -n {cluster.n} -t {cluster.time} -e {cluster.error} -o {cluster.output} --mail-type {cluster.mail-type} --mail-user {cluster.mail-user}" --cluster-config snakemake/cluster_outgroup.json
 
 # Genotype variants in outgroups (this was run with Lars smoove code, and
-# therefore a later version of Snakemake)
-module load bioinfo-tools snakemake/7.18.2
+# therefore a later version of Snakemake: snakemake/7.18.2)
 mkdir -p smoove/genotyped
 # run SV caller in snakemake
 snakemake -np --snakefile snakemake/smoove.snakefile
@@ -408,7 +407,7 @@ bash/genes.sh
 ################################# TRIO CHECK ###################################
 # Checking concordance between parents and offspring in 7 different trios
 
-# Making vcf files withe the trios
+# Making vcf files with the trios
 for type in "DEL" "DUP" "INV"
 do
     # create trio subsets
@@ -468,16 +467,3 @@ R plot_figure5.R
 # immigrants from the same time period
 R plot_figure6.R
 
-
-
-
-
-# Plot PCA with SNPs, INDELS and SVs
-R plot_figure_PCA_SNP_INDEL_SV.R
-
-# Plot PCA with Duphold-removed and rejected, together with PCAs of uncurated
-R plot_figure_PCA_removed_uncurated.R
-
-
-# Plot genetic load
-R plot_figure_load.R
